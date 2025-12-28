@@ -58,7 +58,8 @@ if (!fs.existsSync(photoPath) || !fs.existsSync(photoPath1)) {
 // ===== ПРОВЕРКА ПОДПИСКИ =====
 async function isSubscribed(userId) {
   try {
-    const member = await bot.telegram.getChatMember(CHANNEL_USERNAME, userId);
+    console.log(userId) 
+    const mmember= await bot.telegram.getChatMember(CHANNEL_USERNAME, userId);
     return ["creator", "administrator", "member"].includes(member.status);
   } catch {
     return false;
@@ -199,3 +200,4 @@ app.get("/", (req, res) => {
   res.send("yey");
 });
 app.listen(3000);
+
