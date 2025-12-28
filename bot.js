@@ -1,34 +1,35 @@
-import { Telegraf } from 'telegraf';
-import dotenv from 'dotenv';
-import fs from 'fs';
-import path from 'path';
-import express from 'express'
-import { console } from 'inspector';
+import { Telegraf } from "telegraf";
+import dotenv from "dotenv";
+import fs from "fs";
+import path from "path";
+import express from "express";
+import { console } from "inspector";
 dotenv.config();
-
+let app = express();
+app.use(express.json());
 if (!process.env.BOT_TOKEN) {
   console.error("Ошибка: BOT_TOKEN не найден в .env");
   process.exit(1);
 }
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
-const CHANNEL_USERNAME = '@mskbonuss';
+const CHANNEL_USERNAME = "@mskbonuss";
 const ADMIN_ID = Number(process.env.ADMIN_ID);
 
 // ===== ФАЙЛ С ПОЛЬЗОВАТЕЛЯМИ =====
-const USERS_FILE = path.join(process.cwd(), 'users.json');
-bot.command('admin', async (ctx) => {
+const USERS_FILE = path.join(process.cwd(), "users.json");
+bot.command("admin", async (ctx) => {
   const userId = ctx.from.id;
 
   // Проверка админа
   if (userId !== ADMIN_ID) {
-    return ctx.reply('❌ У вас нет доступа к этой команде');
+    return ctx.reply("❌ У вас нет доступа к этой команде");
   }
 
   ctx.reply(
-    '🛠 Админ-панель\n\n' +
-    'Чтобы отправить сообщение всем пользователям, напиши:\n\n' +
-    '/send ТЕКСТ_СООБЩЕНИЯ'
+    "🛠 Админ-панель\n\n" +
+    "Чтобы отправить сообщение всем пользователям, напиши:\n\n" +
+    "/send ТЕКСТ_СООБЩЕНИЯ"
   );
 });
 
@@ -46,11 +47,11 @@ function saveUser(userId) {
 }
 
 // ===== ЛОКАЛЬНЫЕ ФОТО =====
-const photoPath = path.join(process.cwd(), 'foto', 'photo.jpg');
-const photoPath1 = path.join(process.cwd(), 'foto', 'photo1.jpg');
+const photoPath = path.join(process.cwd(), "foto", "photo.jpg");
+const photoPath1 = path.join(process.cwd(), "foto", "photo1.jpg");
 
 if (!fs.existsSync(photoPath) || !fs.existsSync(photoPath1)) {
-  console.error('Одно или оба фото не найдены');
+  console.error("Одно или оба фото не найдены");
   process.exit(1);
 }
 
@@ -58,7 +59,7 @@ if (!fs.existsSync(photoPath) || !fs.existsSync(photoPath1)) {
 async function isSubscribed(userId) {
   try {
     const member = await bot.telegram.getChatMember(CHANNEL_USERNAME, userId);
-    return ['creator', 'administrator', 'member'].includes(member.status);
+    return ["creator", "administrator", "member"].includes(member.status);
   } catch {
     return false;
   }
@@ -68,15 +69,14 @@ async function isSubscribed(userId) {
 bot.start(async (ctx) => {
   const userId = ctx.from.id;
 
-
-
   saveUser(userId);
 
   // уведомление админу
   try {
     await bot.telegram.sendMessage(
       ADMIN_ID,
-      `👤 Пользователь ${ctx.from.username   ||ctx.from.first_name ||  userId } нажал /start`
+      `👤 Пользователь ${ctx.from.username || ctx.from.first_name || userId
+      } нажал /start`
     );
   } catch { }
 
@@ -93,12 +93,17 @@ bot.start(async (ctx) => {
     { source: fs.createReadStream(photoPath) },
     {
       caption,
-      parse_mode: 'HTML',
+      parse_mode: "HTML",
       reply_markup: {
         inline_keyboard: [
-          [{ text: '✅ Проверить подписку', callback_data: 'check_subscription' }]
-        ]
-      }
+          [
+            {
+              text: "✅ Проверить подписку",
+              callback_data: "check_subscription",
+            },
+          ],
+        ],
+      },
     }
   );
 });
@@ -118,7 +123,7 @@ const secondCap = `Молодец вот твоя <a href="https://lkpq.cc/7f5c1
 
 Благодарю`;
 
-bot.action('check_subscription', async (ctx) => {
+bot.action("check_subscription", async (ctx) => {
   const userId = ctx.from.id;
   const subscribed = await isSubscribed(userId);
 
@@ -135,45 +140,48 @@ bot.action('check_subscription', async (ctx) => {
 `;
 
     await ctx.reply(notSubscribedText, {
-      parse_mode: 'HTML',
+      parse_mode: "HTML",
       reply_markup: {
         inline_keyboard: [
-          [{ text: '✅ Проверить подписку', callback_data: 'check_subscription' }]
-        ]
-      }
+          [
+            {
+              text: "✅ Проверить подписку",
+              callback_data: "check_subscription",
+            },
+          ],
+        ],
+      },
     });
-
   } else {
     await ctx.replyWithPhoto(
       { source: fs.createReadStream(photoPath1) },
       {
         caption: secondCap,
-        parse_mode: 'HTML'
+        parse_mode: "HTML",
       }
     );
   }
 });
 
-
 // ===== РАССЫЛКА ОТ АДМИНА =====
-bot.on('text', async (ctx) => {
+bot.on("text", async (ctx) => {
   if (ctx.from.id !== ADMIN_ID) {
-    return ctx.reply('❌ У тебя нет доступа');
+    return ctx.reply("❌ У тебя нет доступа");
   }
 
-  const text = ctx.message.text.replace('/send', '').trim();
+  const text = ctx.message.text.replace("/send", "").trim();
   if (!text) {
-    return ctx.reply('❗ Используй:\n/send Текст сообщения');
+    return ctx.reply("❗ Используй:\n/send Текст сообщения");
   }
 
   const users = getUsers();
   let sent = 0;
-  const secondText = ''
+  const secondText = "";
   for (const userId of users) {
     const subscribed = await isSubscribed(userId);
     if (!subscribed) {
-      await bot.telegram.sendMessage(userId,);
-    };
+      await bot.telegram.sendMessage(userId);
+    }
 
     try {
       await bot.telegram.sendMessage(userId, text);
@@ -186,6 +194,8 @@ bot.on('text', async (ctx) => {
 
 // ===== ЗАПУСК =====
 bot.launch();
-
-
-
+console.log("Bot started 🚀");
+app.get("/", (req, res) => {
+  res.send("yey");
+});
+app.listen(3000);
