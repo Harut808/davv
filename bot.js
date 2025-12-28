@@ -5,8 +5,7 @@ import path from 'path';
 import express from 'express'
 import { console } from 'inspector';
 dotenv.config();
-let app = express()
-app.use(express.json());
+
 if (!process.env.BOT_TOKEN) {
   console.error("Ошибка: BOT_TOKEN не найден в .env");
   process.exit(1);
@@ -187,8 +186,6 @@ bot.on('text', async (ctx) => {
 
 // ===== ЗАПУСК =====
 bot.launch();
-server.listen(80)
-server.get("/", (req, res) => {
-    res.json("Helo")
-})
+
+
 
