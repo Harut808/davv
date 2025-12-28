@@ -4,9 +4,13 @@ import fs from "fs";
 import path from "path";
 import express from "express";
 import { console } from "inspector";
+
 dotenv.config();
+
 let app = express();
+
 app.use(express.json());
+
 if (!process.env.BOT_TOKEN) {
   console.error("Ошибка: BOT_TOKEN не найден в .env");
   process.exit(1);
@@ -28,8 +32,8 @@ bot.command("admin", async (ctx) => {
 
   ctx.reply(
     "🛠 Админ-панель\n\n" +
-    "Чтобы отправить сообщение всем пользователям, напиши:\n\n" +
-    "/send ТЕКСТ_СООБЩЕНИЯ"
+      "Чтобы отправить сообщение всем пользователям, напиши:\n\n" +
+      "/send ТЕКСТ_СООБЩЕНИЯ"
   );
 });
 
@@ -58,10 +62,12 @@ if (!fs.existsSync(photoPath) || !fs.existsSync(photoPath1)) {
 // ===== ПРОВЕРКА ПОДПИСКИ =====
 async function isSubscribed(userId) {
   try {
-    console.log(userId) 
-    const mmember= await bot.telegram.getChatMember(CHANNEL_USERNAME, userId);
+    console.log("Проверка подписки для пользователя:", userId);
+    const member = await bot.telegram.getChatMember(CHANNEL_USERNAME, userId);
+    console.log("Статус участника:", member.status);
     return ["creator", "administrator", "member"].includes(member.status);
-  } catch {
+  } catch (err) {
+    console.error("Ошибка при проверке подписки:", err);
     return false;
   }
 }
@@ -76,10 +82,11 @@ bot.start(async (ctx) => {
   try {
     await bot.telegram.sendMessage(
       ADMIN_ID,
-      `👤 Пользователь ${ctx.from.username || ctx.from.first_name || userId
+      `👤 Пользователь ${
+        ctx.from.username || ctx.from.first_name || userId
       } нажал /start`
     );
-  } catch { }
+  } catch {}
 
   const caption = `Привет друг 👋  
 В этом боте ты получишь бесплатные сигналы 🎯
@@ -126,19 +133,21 @@ const secondCap = `Молодец вот твоя <a href="https://lkpq.cc/7f5c1
 
 bot.action("check_subscription", async (ctx) => {
   const userId = ctx.from.id;
+  console.log(userId);
+  
   const subscribed = await isSubscribed(userId);
 
   if (!subscribed) {
     const notSubscribedText = `
-🚫 <b>Доступ ограничен</b>
+  🚫 <b>Доступ ограничен</b>
 
-Вы не подписаны на канал, поэтому сигналы недоступны 😔
+   Вы не подписаны на канал, поэтому сигналы недоступны 😔
 
-🔔 Подписка обязательна:
-<a href="https://t.me/+MlguAZ5w20thY2Yy">перейти в канал</a>
+   🔔 Подписка обязательна:
+   <a href="https://t.me/+MlguAZ5w20thY2Yy">перейти в канал</a>
 
-После подписки снова нажмите кнопку проверки ✅
-`;
+   После подписки снова нажмите кнопку проверки ✅
+   `;
 
     await ctx.reply(notSubscribedText, {
       parse_mode: "HTML",
@@ -161,7 +170,7 @@ bot.action("check_subscription", async (ctx) => {
         parse_mode: "HTML",
       }
     );
-  }
+  } saveUser(userId)
 });
 
 // ===== РАССЫЛКА ОТ АДМИНА =====
@@ -187,7 +196,7 @@ bot.on("text", async (ctx) => {
     try {
       await bot.telegram.sendMessage(userId, text);
       sent++;
-    } catch { }
+    } catch {}
   }
 
   ctx.reply(`✅ Рассылка завершена\n📨 Отправлено: ${sent}`);
@@ -200,4 +209,3 @@ app.get("/", (req, res) => {
   res.send("yey");
 });
 app.listen(3000);
-
