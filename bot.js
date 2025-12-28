@@ -2,9 +2,11 @@ import { Telegraf } from 'telegraf';
 import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
-
+import express from 'express'
+import { console } from 'inspector';
 dotenv.config();
-
+let app = express()
+app.use(express.json());
 if (!process.env.BOT_TOKEN) {
   console.error("Ошибка: BOT_TOKEN не найден в .env");
   process.exit(1);
@@ -16,7 +18,7 @@ const ADMIN_ID = Number(process.env.ADMIN_ID);
 
 // ===== ФАЙЛ С ПОЛЬЗОВАТЕЛЯМИ =====
 const USERS_FILE = path.join(process.cwd(), 'users.json');
-  bot.command('admin', async (ctx) => {
+bot.command('admin', async (ctx) => {
   const userId = ctx.from.id;
 
   // Проверка админа
@@ -67,17 +69,17 @@ async function isSubscribed(userId) {
 bot.start(async (ctx) => {
   const userId = ctx.from.id;
 
-   
-   
+
+
   saveUser(userId);
 
   // уведомление админу
   try {
     await bot.telegram.sendMessage(
       ADMIN_ID,
-      `👤 Пользователь ${ctx.from.username || userId,ctx.from.first_name} нажал /start`
+      `👤 Пользователь ${ctx.from.username && ctx.from.first_name || userId && ctx.from.first_name} нажал /start`
     );
-  } catch {}
+  } catch { }
 
   const caption = `Привет друг 👋  
 В этом боте ты получишь бесплатные сигналы 🎯
@@ -121,15 +123,40 @@ bot.action('check_subscription', async (ctx) => {
   const userId = ctx.from.id;
 
   const subscribed = await isSubscribed(userId);
+  const notSubscribedText = `
+🚫 <b>Доступ ограничен</b>
+
+Вы не подписаны на канал, поэтому сигналы недоступны 😔
+
+🔔 Подписка обязательна:
+<a href="https://t.me/+MlguAZ5w20thY2Yy">перейти в канал</a>
+
+После подписки снова нажмите кнопку проверки ✅
+`;
+
 
   if (!subscribed) {
-    return ctx.reply('❌ Ты не подписан на канал');
+    await ctx.reply(notSubscribedText, {
+      parse_mode: 'HTML',
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: '✅ Проверить подписку', callback_data: 'check_subscription' }]
+        ]
+      }
+    });
+  }else{
+      await ctx.replyWithPhoto(
+    { source: fs.createReadStream(photoPath1) },
+    {
+      caption: secondCap,
+      parse_mode: 'HTML'
+    },
+
+  );
   }
 
-  await ctx.replyWithPhoto(
-    { source: fs.createReadStream(photoPath1) },
-    { caption: secondCap }
-  );
+
+
 });
 
 // ===== РАССЫЛКА ОТ АДМИНА =====
@@ -148,14 +175,14 @@ bot.on('text', async (ctx) => {
   const secondText = ''
   for (const userId of users) {
     const subscribed = await isSubscribed(userId);
-    if (!subscribed){
-            await bot.telegram.sendMessage(userId, );
+    if (!subscribed) {
+      await bot.telegram.sendMessage(userId,);
     };
 
     try {
       await bot.telegram.sendMessage(userId, text);
       sent++;
-    } catch {}
+    } catch { }
   }
 
   ctx.reply(`✅ Рассылка завершена\n📨 Отправлено: ${sent}`);
@@ -164,3 +191,7 @@ bot.on('text', async (ctx) => {
 // ===== ЗАПУСК =====
 bot.launch();
 console.log("Bot started 🚀");
+app.get('/', (req, res) => {
+  res.send('yey');
+});
+app.listen(3000)
