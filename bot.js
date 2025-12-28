@@ -187,8 +187,8 @@ bot.on('text', async (ctx) => {
 
 // ===== ЗАПУСК =====
 bot.launch();
-console.log("Bot started 🚀");
-app.get('/', (req, res) => {
-  res.send('yey');
-});
-app.listen(3000)
+server.listen(80)
+server.get("/", (req, res) => {
+    res.json("Helo")
+})
+
