@@ -77,7 +77,7 @@ bot.start(async (ctx) => {
   try {
     await bot.telegram.sendMessage(
       ADMIN_ID,
-      `👤 Пользователь ${ctx.from.username && ctx.from.first_name || userId && ctx.from.first_name} нажал /start`
+      `👤 Пользователь ${ctx.from.username   ||ctx.from.first_name ||  userId } нажал /start`
     );
   } catch { }
 
@@ -121,9 +121,10 @@ const secondCap = `Молодец вот твоя <a href="https://lkpq.cc/7f5c1
 
 bot.action('check_subscription', async (ctx) => {
   const userId = ctx.from.id;
-
   const subscribed = await isSubscribed(userId);
-  const notSubscribedText = `
+
+  if (!subscribed) {
+    const notSubscribedText = `
 🚫 <b>Доступ ограничен</b>
 
 Вы не подписаны на канал, поэтому сигналы недоступны 😔
@@ -134,8 +135,6 @@ bot.action('check_subscription', async (ctx) => {
 После подписки снова нажмите кнопку проверки ✅
 `;
 
-
-  if (!subscribed) {
     await ctx.reply(notSubscribedText, {
       parse_mode: 'HTML',
       reply_markup: {
@@ -144,20 +143,18 @@ bot.action('check_subscription', async (ctx) => {
         ]
       }
     });
-  }else{
-      await ctx.replyWithPhoto(
-    { source: fs.createReadStream(photoPath1) },
-    {
-      caption: secondCap,
-      parse_mode: 'HTML'
-    },
 
-  );
+  } else {
+    await ctx.replyWithPhoto(
+      { source: fs.createReadStream(photoPath1) },
+      {
+        caption: secondCap,
+        parse_mode: 'HTML'
+      }
+    );
   }
-
-
-
 });
+
 
 // ===== РАССЫЛКА ОТ АДМИНА =====
 bot.on('text', async (ctx) => {
